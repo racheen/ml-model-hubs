@@ -1,2 +1,15 @@
 *.pyc
 .DS_Store
+__pycache__/
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+*.pkl
+*.joblib
+models/
+.streamlit/secrets.toml
+.env
+*.csv

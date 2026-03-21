@@ -125,3 +125,7 @@ runtime.txt → python-3.13
 ### Models not loading
 - Run notebooks to regenerate models
 
+
+## Live Demo
+
+**Try the app:** [Machine Learning Models Hub](https://racheen-ml-model-hubs-streamlit-app-ktl5nz.streamlit.app/)

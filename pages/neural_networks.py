@@ -2,7 +2,7 @@
 import streamlit as st
 import numpy as np
 import pandas as pd
-from utils.model_manager import load_model, get_model_info
+from utils.model_manager import load_model, get_model_info, load_scaler
 import matplotlib.pyplot as plt
 from sklearn.preprocessing import MinMaxScaler
 
@@ -71,7 +71,7 @@ def show():
             cgpa = st.number_input("CGPA (0-10)", min_value=0.0, max_value=10.0, value=8.5, step=0.1)
             research = st.selectbox("Research Experience", ["No", "Yes"])
         
-        if st.button("🎓 Predict Admission Chance", use_container_width=True):
+        if st.button("Predict Admission Chance", use_container_width=True):
             try:
                 # Prepare input data
                 research_val = 1 if research == "Yes" else 0
@@ -100,13 +100,12 @@ def show():
                 input_data = np.array([input_features])
                 
                 # Scale the input (using standard scaling based on training data)
-                scaler = MinMaxScaler()
-                # Note: In production, you'd load the fitted scaler from training
+                scaler = load_scaler(category='Neural Networks')
                 input_scaled = scaler.fit_transform(input_data)
                 
                 # Make prediction
-                prediction = model.predict(input_scaled)[0]
-                probability = model.predict_proba(input_scaled)[0]
+                prediction = model.predict(input_data)[0]
+                probability = model.predict_proba(input_data)[0]
                 
                 st.markdown("---")
                 st.markdown("### Admission Prediction Result")

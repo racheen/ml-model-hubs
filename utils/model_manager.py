@@ -82,3 +82,17 @@ def delete_model(model_name):
         os.remove(model_path)
         return True
     return False
+
+def load_scaler(category=None):
+    """Load a fitted scaler from disk"""
+    if category:
+        scaler_path = MODELS_DIR / category / 'scaler.pkl'
+    else:
+        scaler_path = MODELS_DIR / 'scaler.pkl'
+    
+    if not scaler_path.exists():
+        return None
+    
+    scaler = joblib.load(scaler_path)
+
+    return scaler

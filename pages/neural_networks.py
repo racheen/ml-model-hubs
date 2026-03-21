@@ -40,6 +40,24 @@ def show():
     except Exception as e:
         st.error(f"Error loading model: {str(e)}")
         st.stop()
+
+    # Load the scaler
+    try:
+        scaler = load_scaler(category='Neural Networks')
+        if scaler is None:
+            st.error("Neural Network scaler not found. Please train it first.")
+            st.stop()
+        st.success("Neural Network scaler loaded!")
+    except TypeError:
+        # Fallback if category parameter not supported
+        scaler = load_scaler()
+        if scaler is None:
+            st.error("Neural Network scaler not found. Please train it first.")
+            st.stop()
+        st.success("Neural Network scaler loaded!")
+    except Exception as e:
+        st.error(f"Error loading scaler: {str(e)}")
+        st.stop()
     
     # Display model info
     model_info = get_model_info('Neural_Network', 'Neural Networks', use_joblib=True)
@@ -99,8 +117,6 @@ def show():
                 
                 input_data = np.array([input_features])
                 
-                # Scale the input (using standard scaling based on training data)
-                scaler = load_scaler(category='Neural Networks')
                 input_scaled = scaler.fit_transform(input_data)
                 
                 # Make prediction

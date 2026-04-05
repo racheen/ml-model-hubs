@@ -79,7 +79,7 @@ def show():
         col1, col2 = st.columns(2)
         
         with col1:
-            gre_score = st.number_input("GRE Score (0-340)", min_value=0, max_value=340, value=320)
+            gre_score = st.number_input("GRE Score (260-340)", min_value=260, max_value=340, value=320)
             toefl_score = st.number_input("TOEFL Score (0-120)", min_value=0, max_value=120, value=110)
             university_rating = st.slider("University Rating (1-5)", min_value=1, max_value=5, value=3)
             sop = st.slider("Statement of Purpose (1-5)", min_value=1, max_value=5, value=3)

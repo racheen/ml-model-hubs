@@ -4,6 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from utils.model_manager import load_model, get_model_info
+import joblib
+import os
 
 def show():
     """Display real estate pricing prediction page"""
@@ -90,8 +92,12 @@ def show():
         with col12:
             property_type = st.selectbox("Property Type", ["House", "Condo", "Townhouse", "Land"])
         
+        col13, = st.columns(1)
+
+        with col13:
+            property_age = st.number_input("Property Age (years)", min_value=0, max_value=200, value=year_sold - year_built)
+        
         # Calculate property age
-        property_age = year_sold - year_built
         property_type_condo = 1 if property_type == "Condo" else 0
         
         # Model selection
@@ -100,7 +106,7 @@ def show():
                                ["Linear Regression", "Random Forest", "Compare Both"],
                                horizontal=True)
         
-        if st.button("🔮 Predict Price", use_container_width=True):
+        if st.button("Predict Price", use_container_width=True):
             # Prepare input data with all required features from training data
             input_data = np.array([[
                 year_sold,
@@ -186,7 +192,7 @@ def show():
                                       ["Linear Regression", "Random Forest"],
                                       horizontal=True)
                 
-                if st.button("🔮 Predict Prices", use_container_width=True):
+                if st.button("Predict Prices", use_container_width=True):
                     X = df_upload[required_cols].values
                     
                     if batch_model == "Linear Regression" and lr_model:
@@ -243,7 +249,7 @@ def show():
         if lr_model and rf_model:
             st.info("Comparing Linear Regression vs Random Forest models")
             
-            # Model information
+            # Model information with detailed statistics
             col1, col2 = st.columns(2)
             
             with col1:
@@ -252,6 +258,33 @@ def show():
                 if lr_info:
                     st.write(f"**Type:** {lr_info['type']}")
                     st.write(f"**Size:** {lr_info['size_mb']:.2f} MB")
+                
+                # Display model coefficients and statistics
+                st.markdown("**Model Statistics:**")
+                try:
+                    # Get feature names
+                    feature_names = ['year_sold', 'property_tax', 'insurance', 'beds', 'baths', 
+                                   'sqft', 'year_built', 'lot_size', 'basement', 'popular', 
+                                   'recession', 'property_age', 'property_type_Condo']
+                    
+                    # Display coefficients
+                    coef_df = pd.DataFrame({
+                        'Feature': feature_names,
+                        'Coefficient': lr_model.coef_
+                    }).sort_values('Coefficient', key=abs, ascending=False)
+                    
+                    st.dataframe(coef_df, use_container_width=True, height=300)
+                    
+                    # Display intercept
+                    st.metric("Intercept", f"{lr_model.intercept_:,.2f}")
+                    
+                    # Calculate R² on training data if available
+                    # Note: You'll need to load training data or save these metrics during training
+                    st.info("💡 Tip: Train the model with cross-validation to see R², MSE, and F-statistics")
+                    
+                except Exception as e:
+                    st.warning(f"Could not display detailed statistics: {str(e)}")
+                
                 st.write("**Pros:**")
                 st.write("- Fast predictions")
                 st.write("- Interpretable coefficients")
@@ -266,6 +299,38 @@ def show():
                 if rf_info:
                     st.write(f"**Type:** {rf_info['type']}")
                     st.write(f"**Size:** {rf_info['size_mb']:.2f} MB")
+                
+                # Display Random Forest statistics
+                st.markdown("**Model Statistics:**")
+                try:
+                    # Get feature names
+                    feature_names = ['year_sold', 'property_tax', 'insurance', 'beds', 'baths', 
+                                   'sqft', 'year_built', 'lot_size', 'basement', 'popular', 
+                                   'recession', 'property_age', 'property_type_Condo']
+                    
+                    # Display feature importances
+                    importance_df = pd.DataFrame({
+                        'Feature': feature_names,
+                        'Importance': rf_model.feature_importances_
+                    }).sort_values('Importance', ascending=False)
+                    
+                    st.dataframe(importance_df, use_container_width=True, height=300)
+                    
+                    # Display number of estimators
+                    st.metric("Number of Trees", rf_model.n_estimators)
+                    
+                    # Feature importance visualization
+                    fig, ax = plt.subplots(figsize=(10, 6))
+                    ax.barh(importance_df['Feature'], importance_df['Importance'], color='forestgreen', alpha=0.7)
+                    ax.set_xlabel('Feature Importance')
+                    ax.set_title('Random Forest Feature Importances')
+                    ax.invert_yaxis()
+                    plt.tight_layout()
+                    st.pyplot(fig)
+                    
+                except Exception as e:
+                    st.warning(f"Could not display detailed statistics: {str(e)}")
+                
                 st.write("**Pros:**")
                 st.write("- Captures non-linear patterns")
                 st.write("- Robust to outliers")
@@ -273,6 +338,186 @@ def show():
                 st.write("**Cons:**")
                 st.write("- Slower predictions")
                 st.write("- Higher memory usage")
+            
+            
+            st.markdown("---")
+            st.markdown("### Detailed Model Performance Metrics")
+            
+            try:
+                lr_metrics_path = 'models/Real Estate/Linear_Regression_metrics.pkl'
+                rf_metrics_path = 'models/Real Estate/Random_Forest_metrics.pkl'
+                
+                metrics_col1, metrics_col2 = st.columns(2)
+                
+                with metrics_col1:
+                    st.markdown("#### Linear Regression Metrics")
+                    if os.path.exists(lr_metrics_path):
+                        lr_metrics = joblib.load(lr_metrics_path)
+                        
+                        st.markdown("**Model Performance:**")
+                        
+                        # R² Score
+                        r2 = lr_metrics.get('r2_score', None)
+                        if r2 is not None:
+                            st.metric("R² Score", f"{r2:.4f}", 
+                                     help="Coefficient of determination - measures how well predictions fit actual values")
+                        
+                        # Error Metrics
+                        mae = lr_metrics.get('mae', None)
+                        if mae is not None:
+                            st.metric("MAE", f"${mae:,.2f}", 
+                                        help="Mean Absolute Error - average prediction error")
+                        
+                        rmse = lr_metrics.get('rmse', None)
+                        if rmse is not None:
+                            st.metric("RMSE", f"${rmse:,.2f}", 
+                                        help="Root Mean Squared Error - penalizes larger errors")
+                    
+                    
+                        mse = lr_metrics.get('mse', None)
+                        if mse is not None:
+                            # Format MSE in scientific notation if very large
+                            if mse > 1000000:
+                                st.metric("MSE", f"${mse:,.0f}", 
+                                            help="Mean Squared Error")
+                            else:
+                                st.metric("MSE", f"${mse:,.2f}", 
+                                            help="Mean Squared Error")
+                    
+                    
+                        st.markdown("**Statistical Significance:**")
+                        stat_col1, stat_col2 = st.columns(2)
+                        
+                        with stat_col1:
+                            f_stat = lr_metrics.get('f_statistic', None)
+                            if f_stat is not None:
+                                st.metric("F-Statistic", f"{f_stat:.2f}", 
+                                         help="Tests if model is statistically significant")
+                        
+                        with stat_col2:
+                            p_val = lr_metrics.get('p_value', None)
+                            if p_val is not None:
+                                if p_val < 0.0001:
+                                    st.metric("P-Value", f"{p_val:.2e}", 
+                                             help="Probability that results occurred by chance")
+                                else:
+                                    st.metric("P-Value", f"{p_val:.4f}", 
+                                             help="Probability that results occurred by chance")
+                        
+                        if p_val is not None and p_val < 0.05:
+                            st.success("Model is statistically significant (p < 0.05)")
+                        elif p_val is not None:
+                            st.warning("Model may not be statistically significant")
+                            
+                    else:
+                        st.info("Metrics not saved. Retrain the model to see detailed statistics.")
+                
+                with metrics_col2:
+                    st.markdown("#### Random Forest Metrics")
+                    if os.path.exists(rf_metrics_path):
+                        rf_metrics = joblib.load(rf_metrics_path)
+                        
+                        # Create a clean metrics display
+                        st.markdown("**Model Performance:**")
+                        
+                        # R² Score
+                        r2 = rf_metrics.get('r2_score', None)
+                        if r2 is not None:
+                            st.metric("R² Score", f"{r2:.4f}", 
+                                     help="Coefficient of determination - measures how well predictions fit actual values")
+                        
+                        # Error Metrics
+                        mae = rf_metrics.get('mae', None)
+                        if mae is not None:
+                            st.metric("MAE", f"${mae:,.2f}", 
+                                        help="Mean Absolute Error - average prediction error")
+                        
+                        rmse = rf_metrics.get('rmse', None)
+                        if rmse is not None:
+                            st.metric("RMSE", f"${rmse:,.2f}", 
+                                        help="Root Mean Squared Error - penalizes larger errors")
+                    
+                        mse = rf_metrics.get('mse', None)
+                        if mse is not None:
+                            # Format MSE in scientific notation if very large
+                            if mse > 1000000:
+                                st.metric("MSE", f"${mse:,.0f}", 
+                                            help="Mean Squared Error")
+                            else:
+                                st.metric("MSE", f"${mse:,.2f}", 
+                                            help="Mean Squared Error")
+                        
+                        # Random Forest Specific Metrics
+                        st.markdown("**Random Forest Specific:**")
+                        oob_col1, oob_col2 = st.columns(2)
+                        
+                        with oob_col1:
+                            oob = rf_metrics.get('oob_score', None)
+                            if oob is not None:
+                                st.metric("OOB Score", f"{oob:.4f}", 
+                                         help="Out-of-Bag score - internal validation metric")
+                        
+                        with oob_col2:
+                            n_trees = rf_metrics.get('n_estimators', None)
+                            if n_trees is not None:
+                                st.metric("Trees", f"{n_trees}", 
+                                         help="Number of decision trees in the forest")
+                        
+                        # Performance indicator
+                        if r2 is not None:
+                            if r2 > 0.8:
+                                st.success("Excellent model performance (R² > 0.8)")
+                            elif r2 > 0.6:
+                                st.info("✓ Good model performance (R² > 0.6)")
+                            else:
+                                st.warning("Model performance could be improved")
+                                
+                    else:
+                        st.info("Metrics not saved. Retrain the model to see detailed statistics.")
+                
+                # Model Comparison Summary
+                if os.path.exists(lr_metrics_path) and os.path.exists(rf_metrics_path):
+                    st.markdown("---")
+                    st.markdown("#### Model Comparison Summary")
+                    
+                    lr_metrics = joblib.load(lr_metrics_path)
+                    rf_metrics = joblib.load(rf_metrics_path)
+                    
+                    comparison_data = {
+                        'Metric': ['R² Score', 'MAE', 'RMSE', 'MSE'],
+                        'Linear Regression': [
+                            f"{lr_metrics.get('r2_score', 0):.4f}",
+                            f"${lr_metrics.get('mae', 0):,.2f}",
+                            f"${lr_metrics.get('rmse', 0):,.2f}",
+                            f"${lr_metrics.get('mse', 0):,.0f}"
+                        ],
+                        'Random Forest': [
+                            f"{rf_metrics.get('r2_score', 0):.4f}",
+                            f"${rf_metrics.get('mae', 0):,.2f}",
+                            f"${rf_metrics.get('rmse', 0):,.2f}",
+                            f"${rf_metrics.get('mse', 0):,.0f}"
+                        ]
+                    }
+                    
+                    comparison_df = pd.DataFrame(comparison_data)
+                    st.dataframe(comparison_df, use_container_width=True, hide_index=True)
+                    
+                    # Winner determination
+                    lr_r2 = lr_metrics.get('r2_score', 0)
+                    rf_r2 = rf_metrics.get('r2_score', 0)
+                    
+                    if rf_r2 > lr_r2:
+                        improvement = ((rf_r2 - lr_r2) / lr_r2) * 100
+                        st.success(f"**Random Forest** performs better with {improvement:.1f}% higher R² score")
+                    elif lr_r2 > rf_r2:
+                        improvement = ((lr_r2 - rf_r2) / rf_r2) * 100
+                        st.success(f"**Linear Regression** performs better with {improvement:.1f}% higher R² score")
+                    else:
+                        st.info("⚖️ Both models perform similarly")
+                           
+            except Exception as e:
+                st.warning(f"Could not load saved metrics: {str(e)}")
+                st.info("💡 To see detailed metrics, update your training notebook to save metrics using joblib")
             
             # Comparison test
             st.markdown("---")

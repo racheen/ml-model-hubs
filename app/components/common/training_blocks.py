@@ -91,6 +91,239 @@ def render_neural_networks_parameters_block(page_key: str):
     }
     
     return params
+
+def render_linear_regression_parameters_block(page_key: str):
+    st.markdown("### Model Parameters")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        fit_intercept = st.checkbox(
+            "Fit Intercept",
+            value=True,
+            help="Whether to calculate the intercept for this model",
+            key=f"{page_key}_fit_intercept"
+        )
+        positive = st.checkbox(
+            "Positive Coefficients",
+            value=False,
+            help="Force coefficients to be positive",
+            key=f"{page_key}_positive"
+        )
+    
+    with col2:
+        copy_X = st.checkbox(
+            "Copy X",
+            value=True,
+            help="If True, X will be copied; else, it may be overwritten",
+            key=f"{page_key}_copy_X"
+        )
+    
+    params = {
+        "fit_intercept": fit_intercept,
+        "positive": positive,
+        "copy_X": copy_X,
+    }
+    
+    return params
+
+def render_logistic_regression_parameters_block(page_key: str):
+    """Render parameter controls for Logistic Regression."""
+    st.markdown("### Model Parameters")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        penalty = st.selectbox(
+            "Penalty",
+            ["l2", "l1", "elasticnet", None],
+            index=0,
+            help="Regularization penalty type",
+            key=f"{page_key}_penalty"
+        )
+        C = st.number_input(
+            "C (Inverse Regularization Strength)",
+            min_value=0.001,
+            max_value=100.0,
+            value=1.0,
+            format="%.3f",
+            help="Smaller values specify stronger regularization",
+            key=f"{page_key}_C"
+        )
+        solver = st.selectbox(
+            "Solver",
+            ["lbfgs", "liblinear", "newton-cg", "newton-cholesky", "sag", "saga"],
+            index=0,
+            help="Algorithm to use in the optimization problem",
+            key=f"{page_key}_solver"
+        )
+        max_iter = st.slider(
+            "Max Iterations",
+            min_value=100,
+            max_value=2000,
+            value=1000,
+            step=100,
+            help="Maximum number of iterations for solver to converge",
+            key=f"{page_key}_max_iter"
+        )
+    
+    with col2:
+        fit_intercept = st.checkbox(
+            "Fit Intercept",
+            value=True,
+            help="Whether to calculate the intercept for this model",
+            key=f"{page_key}_fit_intercept"
+        )
+        class_weight = st.selectbox(
+            "Class Weight",
+            [None, "balanced"],
+            index=0,
+            help="Weights associated with classes. 'balanced' adjusts weights inversely proportional to class frequencies",
+            key=f"{page_key}_class_weight"
+        )
+        random_state = st.number_input(
+            "Random State",
+            min_value=0,
+            max_value=1000,
+            value=42,
+            help="Controls randomness of the estimator",
+            key=f"{page_key}_lr_random_state"
+        )
+        
+        # Show l1_ratio only if elasticnet is selected
+        if penalty == "elasticnet":
+            l1_ratio = st.slider(
+                "L1 Ratio",
+                min_value=0.0,
+                max_value=1.0,
+                value=0.5,
+                step=0.1,
+                help="The Elastic-Net mixing parameter (0 = L2, 1 = L1)",
+                key=f"{page_key}_l1_ratio"
+            )
+        else:
+            l1_ratio = None
+    
+    # Build params dictionary
+    params = {
+        "penalty": penalty,
+        "C": C,
+        "solver": solver,
+        "max_iter": max_iter,
+        "fit_intercept": fit_intercept,
+        "class_weight": class_weight,
+        "random_state": random_state,
+    }
+    
+    # Add l1_ratio only if elasticnet is selected
+    if l1_ratio is not None:
+        params["l1_ratio"] = l1_ratio
+    
+    return params
+
+def render_random_forest_parameters_block(page_key: str, task_type: str):
+    st.markdown("### Model Parameters")
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        n_estimators = st.slider(
+            "Number of Trees",
+            min_value=10,
+            max_value=500,
+            value=100,
+            step=10,
+            help="The number of trees in the forest",
+            key=f"{page_key}_n_estimators"
+        )
+        max_depth = st.slider(
+            "Max Depth",
+            min_value=1,
+            max_value=50,
+            value=10,
+            step=1,
+            help="Maximum depth of the tree (None for unlimited)",
+            key=f"{page_key}_max_depth"
+        )
+        min_samples_split = st.slider(
+            "Min Samples Split",
+            min_value=2,
+            max_value=20,
+            value=2,
+            step=1,
+            help="Minimum number of samples required to split an internal node",
+            key=f"{page_key}_min_samples_split"
+        )
+        min_samples_leaf = st.slider(
+            "Min Samples Leaf",
+            min_value=1,
+            max_value=20,
+            value=1,
+            step=1,
+            help="Minimum number of samples required to be at a leaf node",
+            key=f"{page_key}_min_samples_leaf"
+        )
+    
+    with col2:
+        max_features = st.selectbox(
+            "Max Features",
+            ["sqrt", "log2", None],
+            index=0,
+            help="Number of features to consider when looking for the best split",
+            key=f"{page_key}_max_features"
+        )
+        bootstrap = st.checkbox(
+            "Bootstrap",
+            value=True,
+            help="Whether bootstrap samples are used when building trees",
+            key=f"{page_key}_bootstrap"
+        )
+        random_state = st.number_input(
+            "Random State",
+            min_value=0,
+            max_value=1000,
+            value=42,
+            help="Controls randomness of the estimator",
+            key=f"{page_key}_rf_random_state"
+        )
+        
+        if task_type == "classification":
+            criterion = st.selectbox(
+                "Criterion",
+                ["gini", "entropy", "log_loss"],
+                help="Function to measure the quality of a split",
+                key=f"{page_key}_criterion"
+            )
+        else:  # regression
+            criterion = st.selectbox(
+                "Criterion",
+                ["squared_error", "absolute_error", "friedman_mse", "poisson"],
+                help="Function to measure the quality of a split",
+                key=f"{page_key}_criterion"
+            )
+    
+    if max_depth == 50:
+        use_max_depth = st.checkbox(
+            "Use unlimited depth",
+            value=False,
+            key=f"{page_key}_unlimited_depth"
+        )
+        if use_max_depth:
+            max_depth = None
+    
+    params = {
+        "n_estimators": n_estimators,
+        "max_depth": max_depth,
+        "min_samples_split": min_samples_split,
+        "min_samples_leaf": min_samples_leaf,
+        "max_features": max_features,
+        "bootstrap": bootstrap,
+        "random_state": random_state,
+        "criterion": criterion,
+    }
+    
+    return params
+
 def render_supervised_training_block(page_key: str, category: str, task_type: str, target_column: str, training_models: list[str], csv_file: str = "Admission.csv" ):
     df = pd.read_csv(f"{DATA_DIR}/{csv_file}")
 
@@ -104,8 +337,14 @@ def render_supervised_training_block(page_key: str, category: str, task_type: st
     scale_features = st.checkbox("Scale features before training", value=True, key=f"{page_key}_scale_features")
     save_artifacts = st.checkbox("Save custom model to models folder", value=True, key=f"{page_key}_save_model")
     
-    if model_name in ["Neural Network"]: 
+    if model_name == "Neural Network":
         parameters = render_neural_networks_parameters_block(page_key=f"{page_key}_parameters")
+    elif model_name == "Linear Regression":
+        parameters = render_linear_regression_parameters_block(page_key=f"{page_key}_parameters")
+    elif model_name == "Logistic Regression":
+        parameters = render_logistic_regression_parameters_block(page_key=f"{page_key}_parameters")
+    elif model_name in ["Random Forest", "Random Forest Regressor"]:
+        parameters = render_random_forest_parameters_block(page_key=f"{page_key}_parameters", task_type=task_type)
 
     if st.button("Train Custom Model", key=f"{page_key}_train_button"):
         with st.spinner("Training model..."):

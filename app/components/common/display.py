@@ -162,6 +162,10 @@ def get_available_models(category: str, use_joblib: bool = True) -> list:
         # Skip scaler files
         if f.stem.lower() == "scaler" or "scaler" in f.stem.lower():
             continue
+
+        # Skip metrics files if present
+        if f.stem.lower() == "metrics" or "metrics" in f.stem.lower():
+            continue
         
         # Remove '_model' suffix if present
         name = f.stem.replace("_model", "")

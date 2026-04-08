@@ -1,6 +1,6 @@
 import streamlit as st
 from app.components.common.forms import render_raw_input_form
-from app.components.common.display import show_probability
+from app.components.common.display import get_available_models, show_probability
 from app.components.common.layout import render_section_title
 from app.core.state_manager import set_page_value
 from app.services.prediction_service import predict_with_default_model
@@ -9,7 +9,18 @@ from app.domain.loan_eligibility.preprocess import preprocess_input
 
 def render_predict_section():
     render_section_title("Predict with Default Model", "Choose a pretrained model and enter one sample.")
-    model_name = st.selectbox("Default model", DEFAULT_MODELS, key="loan_eligibility_default_model")
+    available_models = get_available_models(CATEGORY, USE_JOBLIB)
+    
+    if not available_models:
+        st.warning(f"No models found in category '{CATEGORY}'. Using default models list.")
+        available_models = DEFAULT_MODELS
+    
+    model_name = st.selectbox(
+        "Models", 
+        available_models, 
+        key="loan_eligibility_default_model",
+        help=f"Select from {len(available_models)} available model(s)"
+    )
     submitted, raw_payload = render_raw_input_form("loan_eligibility_predict_form", RAW_FORM_FIELDS, 3)
     if submitted:
         try:

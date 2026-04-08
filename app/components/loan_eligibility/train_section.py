@@ -10,4 +10,5 @@ def render_train_section():
         task_type=TASK_TYPE,
         target_column=TARGET_COLUMN,
         training_models=DEFAULT_TRAINING_MODELS,
+        csv_file="Processed_Credit_Dataset.csv"
     )

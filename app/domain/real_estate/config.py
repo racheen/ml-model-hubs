@@ -21,4 +21,4 @@ RAW_FORM_FIELDS = {
     "property_type_Condo": {"type": "select", "options": [0, 1], "default": 0},
 }
 EXPECTED_FEATURES = list(RAW_FORM_FIELDS.keys())
-DEFAULT_TRAINING_MODELS = ["Linear Regression", "Random Forest", "Neural Network Regressor"]
+DEFAULT_TRAINING_MODELS = ["Linear Regression", "Random Forest", "Neural Network"]

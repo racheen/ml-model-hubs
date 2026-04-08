@@ -33,10 +33,12 @@ def render_predict_section():
             )
             set_page_value("loan_eligibility", "default_prediction", result.prediction)
             set_page_value("loan_eligibility", "default_model_name", model_name)
-            status = "APPROVED" if result.prediction == 1 else "REJECTED"
             col1, col2 = st.columns(2)
             with col1:
-                st.metric("Prediction:", status)
+                if result.prediction == 1:
+                    st.success(f"**LIKELY TO BE APPROVED**")
+                else:
+                    st.error(f"**UNLIKELY TO BE APPROVED**")
             with col2:
                 show_probability(result.probabilities)
             st.markdown("**Processed feature vector**")

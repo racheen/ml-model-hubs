@@ -33,12 +33,14 @@ def render_predict_section():
             )
             set_page_value("neural_networks", "default_prediction", result.prediction)
             set_page_value("neural_networks", "default_model_name", model_name)
-            
-            if result.prediction == 1:
-                st.success(f"**LIKELY TO BE ADMITTED**")
-            else:
-                st.error(f"**UNLIKELY TO BE ADMITTED**")
-            show_probability(result.probabilities, "Admission Probability")
+            col1, col2 = st.columns(2)
+            with col1:
+                if result.prediction == 1:
+                    st.success(f"**LIKELY TO BE ADMITTED**")
+                else:
+                    st.error(f"**UNLIKELY TO BE ADMITTED**")
+            with col2:
+                show_probability(result.probabilities, "Admission Probability")
             st.markdown("**Processed feature vector**")
             st.dataframe(processed, use_container_width=True)
         except Exception as exc:

@@ -11,11 +11,7 @@ def _count_models() -> int:
 
 
 def render_home():
-    st.set_page_config(
-        page_title=APP_TITLE,
-        layout="wide",
-        initial_sidebar_state="expanded",
-    )
+  
 
     total_models = _count_models()
     total_modules = 4

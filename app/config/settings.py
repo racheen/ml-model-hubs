@@ -1,1 +1,1 @@
-APP_TITLE = "ML Project Showcase"
+APP_TITLE = "ML Models Hub"

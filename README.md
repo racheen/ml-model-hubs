@@ -30,7 +30,7 @@ The project adapts notebook-based machine learning solutions into a structured a
 ---
 
 ## Project Structure
-```
+```bash
 ml-model-hubs/
 │
 ├── streamlit_app.py              # Main application entry point
@@ -84,6 +84,7 @@ ml-model-hubs/
 ├── data/                         # Built-in datasets used for training/
 ├── models/                       # Serialized trained models and scalers
 ├── notebooks/                    # Original notebook workflows
+├── reports/
 └── report.pdf
 ```
 

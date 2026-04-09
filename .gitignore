@@ -12,3 +12,4 @@ models/
 .streamlit/secrets.toml
 .env
 *.csv
+*.log

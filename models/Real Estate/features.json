@@ -1,0 +1,15 @@
+[
+  "year_sold",
+  "property_tax",
+  "insurance",
+  "beds",
+  "baths",
+  "sqft",
+  "year_built",
+  "lot_size",
+  "basement",
+  "popular",
+  "recession",
+  "property_age",
+  "property_type_Condo"
+]

@@ -1,8 +1,11 @@
 import numpy as np
 import pandas as pd
 from sklearn.metrics import accuracy_score, f1_score, mean_absolute_error, mean_squared_error, r2_score, silhouette_score
+from app.utils.logger import get_logger
 
+logger = get_logger(__name__)
 def evaluate_supervised_model(model, X_test, y_test, task_type: str):
+    logger.info(f"Evulateting supervised model...")
     predictions = model.predict(X_test)
     if task_type == "classification":
         return {
@@ -17,12 +20,14 @@ def evaluate_supervised_model(model, X_test, y_test, task_type: str):
     }
 
 def evaluate_clustering_model(X, labels):
+    logger.info(f"Evaluating clustering model...")
     unique_labels = len(set(labels))
     if unique_labels < 2:
         return {"silhouette": 0.0}
     return {"silhouette": round(float(silhouette_score(X, labels)), 4)}
 
 def feature_importance_frame(model, feature_names):
+    logger.info(f"Evaluating feature importance...")
     if hasattr(model, "feature_importances_"):
         values = model.feature_importances_
         return pd.DataFrame({"feature": feature_names, "importance": values}).sort_values("importance", ascending=False).reset_index(drop=True)

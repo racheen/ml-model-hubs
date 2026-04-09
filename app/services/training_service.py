@@ -8,10 +8,11 @@ from sklearn.cluster import KMeans
 from app.core.schemas import TrainingResult
 from sklearn.preprocessing import StandardScaler
 from sklearn.cluster import KMeans
-
 from app.core.schemas import TrainingResult
 from app.services.evaluation_service import evaluate_supervised_model, evaluate_clustering_model
+from app.utils.logger import get_logger
 
+logger = get_logger(__name__)
 
 def _get_supervised_model(task_type: str, model_name: str, parameters: dict = None):
     """Get supervised model instance based on task type and model name."""
@@ -35,6 +36,7 @@ def _get_supervised_model(task_type: str, model_name: str, parameters: dict = No
                 random_state=parameters.get("random_state", 42),
             )
         else:
+            logger.error(f"Unknown classification model: {model_name}")
             raise ValueError(f"Unknown classification model: {model_name}")
     else:  # regression
         if model_name == "Linear Regression":
@@ -53,10 +55,13 @@ def _get_supervised_model(task_type: str, model_name: str, parameters: dict = No
                 random_state=parameters.get("random_state", 42),
             )
         else:
+            logger.error(f"Unknown regression model: {model_name}")
             raise ValueError(f"Unknown regression model: {model_name}")
 
 
 def train_supervised_model(df: pd.DataFrame, target_column: str, task_type: str, model_name: str, scale_features: bool = True, test_size: float = 0.2, model_params: dict = None) -> TrainingResult:
+    logger.info(f"Training model: {model_name}")
+    logger.info(f"Parameters: {model_params}")
     X = df.drop(columns=[target_column])
     y = df[target_column]
     stratify = y if task_type == "classification" and y.nunique() < 20 else None
@@ -91,7 +96,7 @@ def train_clustering_model(
         init: str = "k-means++",
         max_iter: int = 300,
         n_init: int = 10) -> TrainingResult:
-    
+    logger.info(f"Training model: {init}")
     X = df[feature_columns].copy()
     scaler = None
     fit_X = X.copy()
